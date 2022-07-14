@@ -75,6 +75,7 @@ export default function SearchInput({
           <div className="flex">
             {[5, 10, 20].map((item) => (
               <div
+                key={item}
                 onClick={() => setSize(item)}
                 className={`${
                   size == item && "bg-slate-200"

@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import ListBook from "./component/ListBook";
 import SearchInput from "./component/SearchInput";
 import { IDataBooks } from "./utils/Interface";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Nav from "./component/Nav";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -14,6 +16,10 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState(1);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
+
+  const [bookmark, setBookmark] = useState<Array<IDataBooks>>(
+    JSON.parse(localStorage.getItem("bookmark") || "[]")
+  );
 
   useEffect(() => {
     getListCategory();
@@ -39,7 +45,6 @@ function App() {
     try {
       setIsLoading(true);
       const params = `categoryId=${selectedCategory}&page=${page}&size=${size}`;
-      console.log(params);
       const req = await fetch("/api/fee-assessment-books?" + params, {
         method: "GET",
       });
@@ -52,7 +57,6 @@ function App() {
         setRawData(res);
         setIsFound(true);
       }
-      console.log(res);
     } catch (error) {
       console.log(error);
     } finally {
@@ -65,7 +69,7 @@ function App() {
       setListData(rawData);
     } else {
       setListData(
-        rawData.filter((item:IDataBooks) =>
+        rawData.filter((item: IDataBooks) =>
           item.title.toLowerCase().includes(search.toLowerCase())
         )
       );
@@ -73,19 +77,50 @@ function App() {
   }, [search]);
 
   return (
-    <div className="px-2 mx-auto my-8 flex w-full max-w-screen-xl flex-col items-center text-center selection:bg-green-900 ">
-      <SearchInput
-        query={search}
-        setQuery={setSearch}
-        size={size}
-        setSize={setSize}
-        page={page}
-        setPage={setPage}
-        setCategory={setSelectedCategory}
-        listCategory={listCategory}
-      />
-      <ListBook data={listData} loading={isLoading} />
-    </div>
+    <BrowserRouter>
+      <div className="mx-auto my-8 flex w-full max-w-screen-xl flex-col items-center px-2 text-center selection:bg-green-900 ">
+        <Nav />
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <>
+                <SearchInput
+                  query={search}
+                  setQuery={setSearch}
+                  size={size}
+                  setSize={setSize}
+                  page={page}
+                  setPage={setPage}
+                  setCategory={setSelectedCategory}
+                  listCategory={listCategory}
+                />
+                <ListBook
+                  data={listData}
+                  loading={isLoading}
+                  isDataFound={isFound}
+                  bookmarkData={bookmark}
+                  setBookmarkData={setBookmark}
+                />
+              </>
+            }
+          />
+          <Route
+            path="/bookmark"
+            element={
+              <>
+                <h3 className="text-3xl font-medium">Bookmark Page</h3>
+                <ListBook
+                  bookmarkData={bookmark}
+                  setBookmarkData={setBookmark}
+                  bookmarkPage
+                />
+              </>
+            }
+          />
+        </Routes>
+      </div>
+    </BrowserRouter>
   );
 }
 
